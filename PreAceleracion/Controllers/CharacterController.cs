@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PreAceleracion.Dtos;
 using PreAceleracion.Entities;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace PreAceleracion.Controllers
 {
+    [Authorize]
     [Route("[controller]")]
     [ApiController]
     public class CharacterController : ControllerBase

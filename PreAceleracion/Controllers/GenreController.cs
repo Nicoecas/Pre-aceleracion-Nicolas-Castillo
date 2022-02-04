@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PreAceleracion.Dtos;
 using PreAceleracion.Entities;
 using PreAceleracion.Services;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace PreAceleracion.Controllers
 {
+    [Authorize]
     [Route("[controller]")]
     [ApiController]
     public class GenreController : ControllerBase
