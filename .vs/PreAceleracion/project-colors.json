@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "a19ce6d6-579b-4b5a-aabb-10c4106f86e0": {
+      "ProjectGuid": "a19ce6d6-579b-4b5a-aabb-10c4106f86e0",
+      "DisplayName": "PreAceleracion",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}
