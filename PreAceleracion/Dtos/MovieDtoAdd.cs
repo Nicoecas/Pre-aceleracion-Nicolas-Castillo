@@ -11,6 +11,6 @@ namespace PreAceleracion.Dtos
         public byte[] Image { get; set; }
         public int Calification { get; set; }
         public int GenreId { get; set; }
-        public virtual ICollection<CharacterMovie> Characters { get; set; }
+        public List<int> CharactersId { get; set; }
     }
 }

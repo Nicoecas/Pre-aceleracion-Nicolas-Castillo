@@ -10,6 +10,7 @@ namespace PreAceleracion.Dtos
         public int Age { get; set; }
         public float Weight { get; set; }
         public string History { get; set; }
-        public virtual ICollection<CharacterMovie> Movies { get; set; }
+
+        public List<int> MoviesId { get; set; }
     }
 }

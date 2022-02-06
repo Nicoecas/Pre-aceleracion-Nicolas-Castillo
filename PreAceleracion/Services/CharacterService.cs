@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PreAceleracion.Data;
 using PreAceleracion.Dtos;
 using PreAceleracion.Entities;
@@ -35,11 +34,31 @@ namespace PreAceleracion.Services
 
         public async Task<Character> GetName(string name)
         {
-            return await preAceleracionContext.Characters.FirstOrDefaultAsync(x => x.Name == name);
+            
+            List<Character> internalvariable = await preAceleracionContext.Characters.ToListAsync();
+            List<CharacterMovie> movieList = await preAceleracionContext.characterMovies.ToListAsync();
+            Character a = (from character in internalvariable
+                           join movies in movieList on
+                           character.IdCharacter equals movies.CharacterId
+                           select character).FirstOrDefault(x => x.Name == name);
+            if (a == null)
+            {
+                a=internalvariable.FirstOrDefault(x => x.Name == name);
+            }
+            return a;
         }
-        public async Task<List<Character>> GetAge(int age)
+        public async Task<IEnumerable<Character>> GetAge(int age)
         {
-            return await preAceleracionContext.Characters.Where(x => x.Age == age).ToListAsync();
+            List<Character> internalvariable = await preAceleracionContext.Characters.ToListAsync();
+            List<CharacterMovie> movieList = await preAceleracionContext.characterMovies.ToListAsync();
+            List<Character> a = (from character in internalvariable
+                                 join movies in movieList on
+                                 character.IdCharacter equals movies.CharacterId
+                                 where character.Age == age
+                                 select character).Distinct().ToList();
+            List<Character> b= preAceleracionContext.Characters.Where(X=>X.Age==age).ToList();
+            List<Character> c = a.Concat(b).Distinct().ToList();
+            return c;
         }
         public async Task<IEnumerable<Character>> GetForMovie(int movie)
         {
@@ -62,9 +81,21 @@ namespace PreAceleracion.Services
             characterToCreate.Age = characterDto.Age;
             characterToCreate.Weight = characterDto.Weight;
             characterToCreate.History = characterDto.History;
-            characterToCreate.Movies = characterDto.Movies;
             await preAceleracionContext.Characters.AddAsync(characterToCreate);
             await preAceleracionContext.SaveChangesAsync();
+            var mayor = preAceleracionContext.Characters.Max(x => x.IdCharacter);
+            foreach (int movie in characterDto.MoviesId)
+            {
+                if (preAceleracionContext.characterMovies.FirstOrDefault(x => x.CharacterId == mayor && x.MovieId == movie) == null)
+                {
+                    var characterMovie = new CharacterMovie();
+                    characterMovie.CharacterId = mayor;
+                    characterMovie.MovieId = movie;
+                    characterToCreate.Movies.Add(characterMovie);
+                    preAceleracionContext.characterMovies.Add(characterMovie);
+                    preAceleracionContext.SaveChanges();
+                }
+            }
             return characterDto;
         }
 

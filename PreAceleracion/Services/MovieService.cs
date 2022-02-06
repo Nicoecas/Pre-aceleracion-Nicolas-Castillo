@@ -1,10 +1,7 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+﻿using Microsoft.EntityFrameworkCore;
 using PreAceleracion.Data;
 using PreAceleracion.Dtos;
 using PreAceleracion.Entities;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,11 +11,9 @@ namespace PreAceleracion.Services
     public class MovieService : GenericRepository<Movie>
     {
         private readonly PreAceleracionContext preAceleracionContext;
-        private readonly IMapper mapper;
-        public MovieService(PreAceleracionContext preAceleracionContext, IMapper mapper) : base(preAceleracionContext)
+        public MovieService(PreAceleracionContext preAceleracionContext) : base(preAceleracionContext)
         {
             this.preAceleracionContext = preAceleracionContext;
-            this.mapper = mapper;
         }
 
         //Get
@@ -39,24 +34,53 @@ namespace PreAceleracion.Services
 
         public async Task<Movie> GetName(string title)
         {
-            return await preAceleracionContext.Movies.FirstOrDefaultAsync(x => x.Title == title);
+            
+            List<Movie> internalvariable = await preAceleracionContext.Movies.ToListAsync();
+            List<CharacterMovie> movieList = await preAceleracionContext.characterMovies.ToListAsync();
+            Movie a = (from movie in internalvariable
+                       join characters in movieList on
+                       movie.IdMovie equals characters.MovieId
+                       select movie).FirstOrDefault(x => x.Title == title);
+            if (a == null)
+            {
+                a = internalvariable.FirstOrDefault(x => x.Title == title);
+            }
+            return a;
         }
 
-        public async Task<List<Movie>> GetGenre(int genre)
+        public async Task<IEnumerable<Movie>> GetGenre(int genre)
         {
-            return await preAceleracionContext.Movies.Where(x => x.GenreId == genre).ToListAsync();
+            List<Movie> internalvariable = await preAceleracionContext.Movies.Where(x=>x.GenreId == genre).ToListAsync();
+            List<CharacterMovie> movieList = await preAceleracionContext.characterMovies.ToListAsync();
+            IEnumerable<Movie> a = (from movie in internalvariable
+                                    join characters in movieList on
+                                    movie.IdMovie equals characters.MovieId
+                                    select movie).Distinct();
+            List<Movie> b = preAceleracionContext.Movies.Where(X => X.GenreId == genre).ToList();
+            List<Movie> c = a.Concat(b).Distinct().ToList();
+            return c;
         }
 
         public List<Movie> Orden(string orden)
         {
             List<Movie> lista = preAceleracionContext.Movies.ToList();
+            List<CharacterMovie> movieList = preAceleracionContext.characterMovies.ToList();
 
             if (orden == "ASC")
             {
-                List<Movie> lista2 = (from d in lista orderby d.Title select d).ToList();
+                List<Movie> lista2 = (from d in lista
+                                      join characters in movieList on
+                                      d.IdMovie equals characters.MovieId
+                                      orderby d.Title select d).ToList();
+                lista2 = lista2.Concat(lista).Distinct().OrderBy(x=>x.Title).ToList();
                 return lista2;
             }
-            return preAceleracionContext.Movies.OrderByDescending(x => x.Title).ToList();
+            List<Movie> lista3 = (from d in lista
+                   join characters in movieList on
+                   d.IdMovie equals characters.MovieId
+                   select d).ToList();
+            lista3 = lista3.Concat(lista).Distinct().OrderByDescending(x => x.Title).ToList();
+            return lista3;
         }
 
         //Post
@@ -71,14 +95,26 @@ namespace PreAceleracion.Services
                 return false;
             }
             movieToCreate.Calification = movieDto.Calification;
-            movieToCreate.Characters = movieDto.Characters;
             movieToCreate.GenreId = movieDto.GenreId;
-            await preAceleracionContext.Movies.AddAsync(movieToCreate);
-            await preAceleracionContext.SaveChangesAsync();
             preAceleracionContext.Movies.Attach(movieToCreate);
             Genre a = preAceleracionContext.Genres.FirstOrDefault(x => x.IdGenero == movieToCreate.GenreId);
             a.Movies.Add(movieToCreate);
+            await preAceleracionContext.Movies.AddAsync(movieToCreate);
             await preAceleracionContext.SaveChangesAsync();
+            var mayor = preAceleracionContext.Movies.Max(x => x.IdMovie);
+            foreach (int character in movieDto.CharactersId)
+            {
+
+                if (preAceleracionContext.characterMovies.FirstOrDefault(x => x.MovieId == mayor && x.CharacterId == character) == null)
+                {
+                    var characterMovie = new CharacterMovie();
+                    characterMovie.MovieId = mayor;
+                    characterMovie.CharacterId = character;
+                    movieToCreate.Characters.Add(characterMovie);
+                    preAceleracionContext.characterMovies.Add(characterMovie);
+                    preAceleracionContext.SaveChanges();
+                }
+            }
             return true;
         }
 

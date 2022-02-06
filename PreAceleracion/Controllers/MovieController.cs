@@ -4,7 +4,6 @@ using PreAceleracion.Dtos;
 using PreAceleracion.Entities;
 using PreAceleracion.Services;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PreAceleracion.Controllers
@@ -74,7 +73,7 @@ namespace PreAceleracion.Controllers
 
                 return Ok();
             }
-            return BadRequest("Formato no válido");
+            return BadRequest("La calificación debe ser de 0 a 5");
         }
 
         [HttpPut]
@@ -91,7 +90,7 @@ namespace PreAceleracion.Controllers
             { 
             return Ok();
             }
-            return BadRequest("Formato no válido");
+            return BadRequest("La calificación debe ser de 0 a 5");
         }
     }
 }

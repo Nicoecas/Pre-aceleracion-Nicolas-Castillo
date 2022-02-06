@@ -19,6 +19,7 @@ namespace PreAceleracion.Entities
         public int Calification { get; set; }
         public int GenreId { get; set; }
         public virtual ICollection<CharacterMovie> Characters { get; set; }
+
         [JsonIgnore]
         public virtual Genre Genre { get; set; }
     }
